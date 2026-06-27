@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>MIP OS</title>
+  <link rel="stylesheet" href="css/app.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="icon-button" id="menuButton" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+
+  <div class="brand">
+    <img src="https://images.fillout.com/orgid-278758/flowpublicid-sq68cpvhvb/widgetid-default/vLdctMaEwcPZsqqgYeQmyE/pasted-image-1773071890634.png" alt="MIP Logo">
+    <div>
+      <h1>MIP OS</h1>
+      <p>Quotes • Customers • Freight</p>
+    </div>
+  </div>
+
+  <button class="primary save-button" id="saveQuoteTopButton">Save Quote</button>
+</header>
+
+<aside class="side-menu" id="sideMenu">
+  <div class="side-menu-head">
+    <strong>MIP OS</strong>
+    <button class="ghost" id="closeMenuButton">Close</button>
+  </div>
+
+  <button class="nav-item active" data-page="dashboardPage">Dashboard</button>
+  <button class="nav-item" data-page="quotesPage">Quotes</button>
+  <button class="nav-item" data-page="quoteBuilderPage">New Quote</button>
+  <button class="nav-item" data-page="customersPage">Customers</button>
+  <button class="nav-item" data-page="librariesPage">Libraries</button>
+  <button class="nav-item" data-page="designerPage">Quote Designer</button>
+  <button class="nav-item" data-page="settingsPage">Settings</button>
+</aside>
+
+<div class="scrim" id="menuScrim"></div>
+
+<main class="app-shell">
+
+  <section class="page active" id="dashboardPage">
+    <div class="page-title">
+      <div>
+        <h2>Dashboard</h2>
+        <p>Fast overview of your quoting operation.</p>
+      </div>
+      <button class="primary" data-page-button="quoteBuilderPage">+ New Quote</button>
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <span>Draft Quotes</span>
+        <strong id="dashDrafts">0</strong>
+      </div>
+      <div class="metric-card">
+        <span>Sent Quotes</span>
+        <strong id="dashSent">0</strong>
+      </div>
+      <div class="metric-card">
+        <span>Accepted</span>
+        <strong id="dashAccepted">0</strong>
+      </div>
+      <div class="metric-card">
+        <span>Total Quoted</span>
+        <strong id="dashTotal">$0.00</strong>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <h3>Recent Quotes</h3>
+        <button class="ghost" data-page-button="quotesPage">View all</button>
+      </div>
+      <div id="recentQuotesList" class="list-stack"></div>
+    </div>
+  </section>
+
+  <section class="page" id="quotesPage">
+    <div class="page-title">
+      <div>
+        <h2>Quotes</h2>
+        <p>Pipeline, list view, filters, and quote recovery.</p>
+      </div>
+      <button class="primary" id="newQuoteButton">+ New Quote</button>
+    </div>
+
+    <div class="toolbar card">
+      <input id="quoteSearch" placeholder="Search quote, customer, route...">
+      <select id="quoteStatusFilter">
+        <option value="all">All Statuses</option>
+        <option value="draft">Draft</option>
+        <option value="sent">Sent</option>
+        <option value="accepted">Accepted</option>
+        <option value="rejected">Rejected</option>
+      </select>
+      <select id="quoteDateFilter">
+        <option value="all">All Dates</option>
+        <option value="7">Last 7 Days</option>
+        <option value="30">Last 30 Days</option>
+        <option value="90">Last 90 Days</option>
+      </select>
+      <select id="quoteViewMode">
+        <option value="kanban">Pipeline</option>
+        <option value="list">List</option>
+      </select>
+    </div>
+
+    <div id="quotesBoard"></div>
+  </section>
+
+  <section class="page" id="quoteBuilderPage">
+    <div class="quote-layout">
+      <div class="quote-editor">
+        <div class="mini-tabs">
+          <button class="mini-tab active" data-editor-tab="quoteTab">Quote</button>
+          <button class="mini-tab" data-editor-tab="routeTab">Route</button>
+          <button class="mini-tab" data-editor-tab="cargoTab">Cargo</button>
+          <button class="mini-tab" data-editor-tab="chargesTab">Charges</button>
+        </div>
+
+        <div class="editor-panel active" id="quoteTab">
+          <div class="card">
+            <div class="card-title">
+              <h3>Quote Info</h3>
+              <button class="ghost" id="addQuoteFieldButton">+ Field</button>
+            </div>
+            <div id="quoteFieldsList" class="list-stack"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <h3>Customer</h3>
+              <button class="ghost" id="openCustomersFromQuote">Customers</button>
+            </div>
+            <label>Customer search / name</label>
+            <input id="customerInput" placeholder="Start typing customer..." autocomplete="off">
+            <div id="customerSuggestBox" class="suggest-box"></div>
+          </div>
+
+          <div class="card">
+            <h3>Terms and Conditions</h3>
+            <textarea id="termsBox">Quote is subject to final weight, dimensions, carrier acceptance, availability, customs requirements, exams, storage, waiting time, and applicable accessorial charges.</textarea>
+          </div>
+        </div>
+
+        <div class="editor-panel" id="routeTab">
+          <div class="card">
+            <div class="card-title">
+              <h3>Route Templates</h3>
+              <button class="ghost" id="manageRoutesButton">Manage</button>
+            </div>
+            <div id="routeShortcutChips" class="chip-row"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <h3>Route Fields</h3>
+              <button class="ghost" id="addRouteFieldButton">+ Field</button>
+            </div>
+            <div id="routeFieldsList" class="list-stack"></div>
+          </div>
+        </div>
+
+        <div class="editor-panel" id="cargoTab">
+          <div class="card">
+            <div class="card-title">
+              <h3>Cargo</h3>
+              <div class="button-row">
+                <button class="ghost" id="manageCargoFlagsButton">Flags</button>
+                <button class="primary" id="addCargoButton">+ Cargo</button>
+              </div>
+            </div>
+            <div id="cargoList" class="list-stack"></div>
+          </div>
+        </div>
+
+        <div class="editor-panel" id="chargesTab">
+          <div class="card">
+            <div class="card-title">
+              <h3>Charge Presets</h3>
+              <button class="ghost" id="saveChargePresetButton">Save Preset</button>
+            </div>
+            <select id="chargePresetSelect"></select>
+            <button class="primary full" id="applyChargePresetButton">Apply Preset</button>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <h3>Charge Library</h3>
+              <button class="ghost" id="manageChargeLibraryButton">Manage</button>
+            </div>
+            <div id="chargeLibraryChips" class="chip-row"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <h3>Charges</h3>
+              <button class="primary" id="addManualChargeButton">+ Manual</button>
+            </div>
+            <div id="chargesList" class="list-stack"></div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="quote-preview-panel">
+        <div class="card control-card">
+          <div class="metric-grid small">
+            <div class="metric-card"><span>Weight</span><strong id="summaryWeight">0 KG</strong></div>
+            <div class="metric-card"><span>CBM</span><strong id="summaryCbm">0</strong></div>
+            <div class="metric-card"><span>Vol KG</span><strong id="summaryVolKg">0</strong></div>
+            <div class="metric-card"><span>Chargeable</span><strong id="summaryChargeable">0 KG</strong></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <h3>Preview</h3>
+            <button class="ghost" id="copyEmailButton">Copy Email</button>
+          </div>
+          <div id="quotePreview" class="quote-preview"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="page" id="customersPage">
+    <div class="page-title">
+      <div>
+        <h2>Customers</h2>
+        <p>Customer database for faster quoting.</p>
+      </div>
+      <button class="primary" id="addCustomerButton">+ Customer</button>
+    </div>
+
+    <div class="toolbar card">
+      <input id="customerSearch" placeholder="Search customer, email, phone...">
+      <button class="ghost" id="refreshCustomersButton">Refresh</button>
+    </div>
+
+    <div id="customersList" class="list-stack"></div>
+  </section>
+
+  <section class="page" id="librariesPage">
+    <div class="page-title">
+      <div>
+        <h2>Libraries</h2>
+        <p>Charges, cargo flags, and route shortcuts.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <h3>Charge Library</h3>
+        <button class="primary" id="libraryAddChargeButton">+ Charge</button>
+      </div>
+      <div id="libraryChargeList" class="list-stack"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <h3>Cargo Flags</h3>
+        <button class="primary" id="libraryAddFlagButton">+ Flag</button>
+      </div>
+      <div id="libraryFlagList" class="list-stack"></div>
+    </div>
+  </section>
+
+  <section class="page" id="designerPage">
+    <div class="page-title">
+      <div>
+        <h2>Quote Designer</h2>
+        <p>Control layout, logo, colors, columns, and quote style.</p>
+      </div>
+    </div>
+
+    <div class="quote-layout">
+      <div>
+        <div class="card">
+          <h3>Design Controls</h3>
+          <label>Style</label>
+          <select id="designStyle">
+            <option value="premium">Premium</option>
+            <option value="clean">Clean</option>
+            <option value="compact">Compact</option>
+            <option value="dark">Dark Header</option>
+          </select>
+
+          <label>Accent Color</label>
+          <input type="color" id="designAccent" value="#0b1220">
+
+          <label>Header Title</label>
+          <input id="designTitle" value="MIP Cargo Express">
+
+          <label>Header Subtitle</label>
+          <input id="designSubtitle" value="Freight Quotation">
+
+          <label>Logo URL</label>
+          <input id="designLogoUrl" value="https://images.fillout.com/orgid-278758/flowpublicid-sq68cpvhvb/widgetid-default/vLdctMaEwcPZsqqgYeQmyE/pasted-image-1773071890634.png">
+
+          <label>Extra Image URL</label>
+          <input id="designExtraImageUrl" placeholder="Optional banner image">
+
+          <button class="primary full" id="saveDesignButton">Save Design</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <h3>Section Order</h3>
+            <span class="pill">Up / Down</span>
+          </div>
+          <div id="sectionOrderList" class="list-stack"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Live Preview</h3>
+        <div id="designerPreview" class="quote-preview"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" id="settingsPage">
+    <div class="page-title">
+      <div>
+        <h2>Settings</h2>
+        <p>Supabase and app status.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Supabase</h3>
+      <p id="supabaseStatus">Checking...</p>
+    </div>
+  </section>
+
+</main>
+
+<div class="bottom-save">
+  <button class="primary full" id="saveQuoteBottomButton">Save Quote</button>
+</div>
+
+<div class="drawer" id="drawer">
+  <div class="drawer-handle"></div>
+  <div id="drawerContent"></div>
+</div>
+<div class="drawer-scrim" id="drawerScrim"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
