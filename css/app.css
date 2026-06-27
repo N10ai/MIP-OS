@@ -331,3 +331,16 @@ label{display:block;margin:12px 0 5px;color:var(--muted);font-size:12px;font-wei
   .card-title{display:none!important}
   .quote-preview{border:0!important;border-radius:0!important;padding:22px!important}
 }
+
+.app-status{
+  max-width:1280px;
+  margin:0 auto 12px;
+  padding:10px 14px;
+  border-radius:16px;
+  background:rgba(255,255,255,.70);
+  border:1px solid var(--line);
+  color:var(--muted);
+  font-size:13px;
+}
+.app-status.ok{color:#166534;background:#dcfce7}
+.app-status.err{color:#991b1b;background:#fee2e2}
